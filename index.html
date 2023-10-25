@@ -13,8 +13,27 @@
       margin: 0;
     }
 
+    h1 {
+      font-size: 4vw; /* Adjust the value to control the scaling */
+    }
+
     .button {
       margin-bottom: 10px;
+    }
+
+    .button a {
+      font-size: 2vw; /* Adjust the value to control the scaling */
+    }
+
+    /* Media query for smaller screens */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 6vw; /* Adjust the value to control the scaling */
+      }
+
+      .button a {
+        font-size: 3vw; /* Adjust the value to control the scaling */
+      }
     }
   </style>
 </head>
