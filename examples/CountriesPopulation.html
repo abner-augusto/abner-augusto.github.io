@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe Visualization</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #globeViz {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+</head>
+<body>
+  <div id="globeViz"></div>
+
+  <script type="module">
+
+    // Create a WebGL renderer
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('globeViz').appendChild(renderer.domElement);
+
+    // Create the globe visualization
+    
+    const world = Globe()
+      (renderer.domElement)
+      .globeImageUrl('http://unpkg.com/three-globe/example/img/earth-dark.jpg')
+      .pointOfView({ altitude: 4 }, 5000)
+      .polygonCapColor(feat => 'rgba(200, 0, 0, 0.6)')
+      .polygonSideColor(() => 'rgba(0, 100, 0, 0.05)')
+      .polygonLabel(({ properties: d }) => `
+          <b>${d.ADMIN} (${d.ISO_A2})</b> <br />
+          Population: <i>${Math.round(+d.POP_EST / 1e4) / 1e2}M</i>
+        `);
+
+    // Enable auto-rotation
+    world.controls().autoRotate = true;
+    world.controls().autoRotateSpeed = 1.8;
+
+    // Fetch the countries data
+    fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+      .then(res => res.json())
+      .then(countries => {
+        // Filter out Antarctica (ISO_A2 = 'AQ')
+        const filteredCountries = countries.features.filter(d => d.properties.ISO_A2 !== 'AQ');
+
+        // Set the polygons data and set a timeout for the transition
+        world.polygonsData(filteredCountries);
+
+        setTimeout(() => world
+          .polygonsTransitionDuration(4000)
+          .polygonAltitude(feat => Math.max(0.1, Math.sqrt(+feat.properties.POP_EST) * 7e-5))
+        , 3000);
+      });
+
+    // Render loop
+    function animate() {
+      requestAnimationFrame(animate);
+      world.controls().update(); // Update controls for auto-rotation
+      renderer.render(world.scene(), world.camera());
+    }
+    animate();
+  </script>
+</body>
+</html>
