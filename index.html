@@ -1,72 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Three.JS Globes Tests</title>
   <style>
     body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
       margin: 0;
     }
+
+    .button {
+      margin-bottom: 10px;
+    }
   </style>
-  <script src="https://unpkg.com/d3"></script>
-  <script src="https://unpkg.com/d3-dsv"></script>
-  <script src="https://unpkg.com/globe.gl"></script>
-  <script src="https://unpkg.com/three"></script>
 </head>
-
 <body>
-  <div id="globeViz"></div>
-
-  <script>
-    const EARTH_RADIUS_KM = 6371; // km
-    const SAT_SIZE = 100; // km
-    const TIME_STEP = 3 * 1000; // per frame
-
-    const N = 300;
-    const gData = [...Array(N).keys()].map(() => ({
-      lat: (Math.random() - 0.5) * 180,
-      lng: (Math.random() - 0.5) * 360,
-      alt: Math.random() * 0.8,
-      radius: Math.random() * 5,
-      color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
-    }));
-
-    const world = Globe()
-      (document.getElementById('globeViz'))
-      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-      .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-      .showGraticules(true)
-      .pointOfView({ altitude: 3.5 })
-      .objectLat('lat')
-      .objectLng('lng')
-      .objectAltitude('alt')
-      .objectFacesSurface(false)
-      .enablePointerInteraction(false)
-      .customLayerData(gData)
-      .customThreeObject(d => {
-        const geometry = new THREE.SphereGeometry(d.radius);
-        const object = new THREE.Mesh(
-          geometry,
-          new THREE.MeshLambertMaterial({ color: d.color })
-        );
-        object.material.userData.originalColor = object.material.color.clone();
-        object.material.userData.geometry = geometry;
-        return object;
-      })
-      .customThreeObjectUpdate((obj, d) => {
-        Object.assign(obj.position, world.getCoords(d.lat, d.lng, d.alt));
-
-        // Calculate color based on altitude
-        const lowAltitudeColor = new THREE.Color('blue');
-        const highAltitudeColor = new THREE.Color('yellow');
-        const maxAltitude = 0.8;
-        const altitudeRatio = d.alt / maxAltitude;
-
-        const color = new THREE.Color().lerpColors(lowAltitudeColor, highAltitudeColor, altitudeRatio);
-        obj.material.color = color;
-      });
-
-    const satGeometry = new THREE.OctahedronGeometry(SAT_SIZE * world.getGlobeRadius() / EARTH_RADIUS_KM / 2, 0);
-    const satMaterial = new THREE.MeshLambertMaterial({ color: 'palegreen', transparent: true, opacity: 0.7 });
-    world.objectThreeObject(() => new THREE.Mesh(satGeometry, satMaterial));
-  </script>
+  <h1>Three.JS Globes Tests</h1>
+  <div class="button">
+    <a href="https://abner-augusto.github.io/examples/Satellites.html" target="_blank">Satellites</a>
+  </div>
+  <div class="button">
+    <a href="https://abner-augusto.github.io/examples/ChoroplethCountries.html" target="_blank">Choropleth Countries</a>
+  </div>
+  <div class="button">
+    <a href="https://abner-augusto.github.io/examples/CountriesPopulation.html" target="_blank">Countries Population</a>
+  </div>
+  <div class="button">
+    <a href="https://abner-augusto.github.io/examples/GlobeWithPoints.html" target="_blank">Globe with Points</a>
+  </div>
+  <div class="button">
+    <a href="https://abner-augusto.github.io/examples/WorldPopulation.html" target="_blank">World Population</a>
+  </div>
 </body>
 </html>
