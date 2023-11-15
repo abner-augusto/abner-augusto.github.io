@@ -20,6 +20,28 @@
     const SAT_SIZE = 100; // km
     const TIME_STEP = 3 * 1000; // per frame
 
+    const N = 800;
+    const gridSize = Math.ceil(Math.sqrt(N)); // Calculate grid size based on the number of points
+    const spacing = 360 / gridSize; // Adjust this value to change the spacing between points
+    const gData = [];
+
+    // Generate evenly spaced points in a grid pattern on the globe, excluding the poles
+    for (let i = 1; i < gridSize - 1; i++) {
+      const lat = (i / (gridSize - 1)) * 180 - 90;
+      const numLng = Math.ceil(gridSize * Math.cos((lat / 180) * Math.PI)); // Adjust the number of longitude points based on latitude
+
+      for (let j = 0; j < numLng; j++) {
+        const lng = (j / (numLng - 1)) * 360 - 180;
+
+        gData.push({
+          lat,
+          lng,
+          alt: Math.random() * 0.8,
+          radius: Math.random() * 5,
+          color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
+        });
+      }
+    }
     const N = 5000;
     const gData = [...Array(N).keys()].map(() => ({
       lat: (Math.random() - 0.5) * 180,
@@ -29,8 +51,9 @@
       color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
     }));
 
+    const globeContainer = document.getElementById('globeViz');
     const world = Globe()
-      (document.getElementById('globeViz'))
+      (globeContainer)
       .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
       .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
       .showGraticules(true)
@@ -67,6 +90,17 @@
     const satGeometry = new THREE.OctahedronGeometry(SAT_SIZE * world.getGlobeRadius() / EARTH_RADIUS_KM / 2, 0);
     const satMaterial = new THREE.MeshLambertMaterial({ color: 'palegreen', transparent: true, opacity: 0.7 });
     world.objectThreeObject(() => new THREE.Mesh(satGeometry, satMaterial));
+
+    function handleResize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      globeContainer.style.width = `${width}px`;
+      globeContainer.style.height = `${height}px`;
+      world.width(width).height(height).resize();
+    }
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
   </script>
 </body>
 </html>
