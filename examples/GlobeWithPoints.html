@@ -20,7 +20,7 @@
     const SAT_SIZE = 100; // km
     const TIME_STEP = 3 * 1000; // per frame
 
-    const N = 800;
+    const N = 5000;
     const gridSize = Math.ceil(Math.sqrt(N)); // Calculate grid size based on the number of points
     const spacing = 360 / gridSize; // Adjust this value to change the spacing between points
     const gData = [];
@@ -37,19 +37,11 @@
           lat,
           lng,
           alt: Math.random() * 0.8,
-          radius: Math.random() * 5,
+          radius: Math.random() * 3,
           color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
         });
       }
     }
-    const N = 5000;
-    const gData = [...Array(N).keys()].map(() => ({
-      lat: (Math.random() - 0.5) * 180,
-      lng: (Math.random() - 0.5) * 360,
-      alt: Math.random() * 0.8,
-      radius: Math.random() * 2,
-      color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
-    }));
 
     const globeContainer = document.getElementById('globeViz');
     const world = Globe()
