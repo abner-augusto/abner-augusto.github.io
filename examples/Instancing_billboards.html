@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - circle instance test</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main.css">
+</head>
+<body>
+
+	<div id="info">
+		<div id="notSupported" style="display:none">Sorry, your graphics card + browser does not support hardware instancing</div>
+	</div>
+
+	<script id="vshader" type="x-shader/x-vertex">
+		precision highp float;
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+		uniform float time;
+		attribute vec3 position;
+		attribute vec2 uv;
+		attribute vec3 translate;
+		varying vec2 vUv;
+		attribute float scale;
+		varying float vScale;
+
+		void main() {
+
+			vec4 mvPosition = modelViewMatrix * vec4( translate, 2.0 );
+			vec3 trTime = vec3(translate.x + time,translate.y + time,translate.z + time);
+			
+			float scale =  sin( 2.75 ) + sin( trTime.y * 4.0 ) + sin( 1.0 );
+			
+			
+			float offsetX = sin(translate.x * 1200.0 + time) * 10.0;
+			float offsetY = sin(translate.y * 1200.0 + time) * 10.0;
+
+			mvPosition.x += offsetX; // Apply the oscillation in the x-axis
+			mvPosition.y += offsetY; // Apply the oscillation in the y-axis
+
+			//float scale = sin(time + translate.x * 10.0) * sin(time + translate.y * 6.0);
+
+			vScale = scale;
+			//scale = scale * 2.0 + 12.0;
+			scale = 12.0;
+			mvPosition.xyz += position * scale;
+			vUv = uv;
+			gl_Position = projectionMatrix * mvPosition;
+
+		}
+	</script>
+	<script id="fshader" type="x-shader/x-fragment">
+		precision highp float;
+
+		uniform sampler2D map;
+
+		varying vec2 vUv;
+		varying float vScale;
+		
+
+		// HSL to RGB Convertion helpers
+		vec3 HUEtoRGB(float H){
+			H = mod(H,1.0);
+			float R = abs(H * 6.0 - 3.0) - 1.0;
+			float G = 2.0 - abs(H * 6.0 - 2.0);
+			float B = 2.0 - abs(H * 6.0 - 4.0);
+			return clamp(vec3(R,G,B),0.0,1.0);
+		}
+
+		vec3 HSLtoRGB(vec3 HSL){
+			vec3 RGB = HUEtoRGB(HSL.x);
+			float C = (1.0 - abs(2.0 * HSL.z - 1.0)) * HSL.y;
+			return (RGB - 0.5) * C + HSL.z;
+		}
+
+		void main() {
+			vec4 diffuseColor = texture2D( map, vUv );
+			gl_FragColor = vec4( diffuseColor.xyz * HSLtoRGB(vec3(vScale/5.0, 1.0, 0.5)), diffuseColor.w );
+
+			if ( diffuseColor.w < 0.5 ) discard;
+		}
+	</script>
+
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+				"three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+			}
+		}
+	</script>
+
+	<script type="module">
+		import * as THREE from 'three';
+		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+		import Stats from 'three/addons/libs/stats.module.js';
+		import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+		import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+		import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+		import { HalftonePass } from 'three/addons/postprocessing/HalftonePass.js';	
+
+		let container, stats;
+		let controls;
+		let camera, scene, renderer, composer;
+		let geometry, material, mesh;
+		
+		const raycaster = new THREE.Raycaster();
+		const mouse = new THREE.Vector2( 1, 1 );
+
+
+
+		function init() {
+
+			renderer = new THREE.WebGLRenderer();
+
+			if ( renderer.capabilities.isWebGL2 === false && renderer.extensions.has( 'ANGLE_instanced_arrays' ) === false ) {
+
+				document.getElementById( 'notSupported' ).style.display = '';
+				return false;
+
+			}
+			
+			const hoverScale = 1.0; 
+			
+
+			container = document.createElement( 'div' );
+			document.body.appendChild( container );
+
+			camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 5000 );
+			camera.position.z = 800;
+
+			scene = new THREE.Scene();
+
+			//raycasting with mouse
+			const raycaster = new THREE.Raycaster();
+			const mouse = new THREE.Vector2( 1, 1 );
+
+			//mesh operations
+			const circleGeometry = new THREE.CircleGeometry( .8, 6 );
+
+			geometry = new THREE.InstancedBufferGeometry();
+			geometry.index = circleGeometry.index;
+			geometry.attributes = circleGeometry.attributes;
+
+
+			const particleCount = 7000;
+			const radius = 1.2; // Raio da esfera
+			const translateArray = new Float32Array(particleCount * 2);
+			const scaleArray = new Float32Array(particleCount);
+			
+			
+			for (let i = 0, i3 = 0; i < particleCount; i++, i3 += 3) {
+				let theta = Math.random() * 2 * Math.PI;
+				let phi = Math.acos(2 * Math.random() - 1);
+				let r = Math.cbrt(Math.random()) * radius;
+			
+				translateArray[i3 + 0] = r * Math.sin(phi) * Math.cos(theta);
+				translateArray[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+				translateArray[i3 + 2] = r * Math.cos(phi);
+
+			}
+
+			geometry.setAttribute( 'translate', new THREE.InstancedBufferAttribute( translateArray, 3 ) );
+			geometry.setAttribute('scale', new THREE.InstancedBufferAttribute(scaleArray, 1));
+
+			material = new THREE.RawShaderMaterial( {
+				uniforms: {
+					'map': { value: new THREE.TextureLoader().load( 'textures/circle.png' ) },
+					'time': { value: 0.0 },
+					'hoverScale': { value: hoverScale }
+				},
+				vertexShader: document.getElementById( 'vshader' ).textContent,
+				fragmentShader: document.getElementById( 'fshader' ).textContent,
+				depthTest: true,
+				depthWrite: true
+			} );
+
+			mesh = new THREE.Mesh( geometry, material );
+			mesh.scale.set( 500, 500, 500 );
+			scene.add( mesh );
+
+			//render, windows and camera controls
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			container.appendChild( renderer.domElement );
+
+			stats = new Stats();
+			container.appendChild( stats.dom );
+
+			window.addEventListener( 'resize', onWindowResize );
+			document.addEventListener( 'mousemove', onMouseMove );
+			controls = new OrbitControls(camera, renderer.domElement);
+
+			const gui = new GUI();
+
+			const Particles = {
+			count: particleCount
+			};
+
+			const countController = gui.add(Particles, 'count', 1000, 50000);
+			countController.onChange(() => updateParticleCount(Particles.count));
+				
+			//post processing
+
+			composer = new EffectComposer( renderer );
+				const renderPass = new RenderPass( scene, camera );
+				const params = {
+					shape: 2,
+					radius: 2,
+					rotateR: Math.PI / 12,
+					rotateB: Math.PI / 12 * 2,
+					rotateG: Math.PI / 12 * 3,
+					scatter: 0,
+					blending: 1,
+					blendingMode: 1,
+					greyscale: false,
+					disable: false
+				};
+				const halftonePass = new HalftonePass( window.innerWidth, window.innerHeight, params );
+				composer.addPass( renderPass );
+				composer.addPass( halftonePass );
+
+				window.onresize = function () {
+
+				};		
+			
+			return true;
+
+
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			composer.setSize( window.innerWidth, window.innerHeight );
+
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+
+/* 			// Perform raycasting to check for intersection with the mesh
+			raycaster.setFromCamera(mouse, camera);
+			const intersection = raycaster.intersectObject(mesh);
+
+			// Update the scale of each instance
+			for (let i = 0; i < particleCount; i++) {
+				const scale = intersection.length > 0 ? 5.0 : 1.0;
+				geometry.attributes.scale.array[i] = scale;
+			}
+			geometry.attributes.scale.needsUpdate = true;
+ */
+			// Continue with the existing code
+			render();
+			composer.render();
+
+			stats.update();
+		}
+
+		function onMouseMove(event) {
+			event.preventDefault();
+			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+			raycaster.setFromCamera(mouse, camera);
+		}
+
+		function render() {
+
+			const time = performance.now() * 0.0005;
+			controls.update();
+			material.uniforms[ 'time' ].value = time;
+
+			
+			renderer.render( scene, camera );
+
+		}
+
+		function updateParticleCount(value) {
+			const count = Math.floor(value);
+			const translateArray = new Float32Array(count * 3);
+			const scaleArray = new Float32Array(count);
+
+			// Generate new particle positions and scales
+			for (let i = 0, i3 = 0; i < count; i++, i3 += 3) {
+				let theta = Math.random() * 2 * Math.PI;
+				let phi = Math.acos(2 * Math.random() - 1);
+
+				translateArray[i3 + 0] = Math.sin(phi) * Math.cos(theta);
+				translateArray[i3 + 1] = Math.sin(phi) * Math.sin(theta);
+				translateArray[i3 + 2] = Math.cos(phi);
+			}
+
+			// Update the particle count and attributes
+			geometry.maxInstancedCount = count;
+			geometry.setAttribute('translate', new THREE.InstancedBufferAttribute(translateArray, 3));
+			geometry.setAttribute('scale', new THREE.InstancedBufferAttribute(scaleArray, 1));
+			geometry.instanceCount = count;
+			geometry.needsUpdate = true;
+		}
+
+		if ( init() ) {
+
+			animate();
+
+		}
+	</script>
+
+</body>
+</html>
