@@ -9,25 +9,30 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      height: 5%;
+      margin: 2%;
     }
 
       h1 {
-        font-size: 230%;
+        font-size: 5vw;
         margin-bottom: 5%;
-        
+        justify-self: center;
+        text-align: center;
+        font-style: italic;
       }
 
       .button {
-      margin-bottom: 2%;
-      padding: 5px 5px;
+      margin-bottom: 2vw;
+      padding: 1vw 1vw;
       border: 1px solid rgb(85, 85, 85); 
-      border-radius: 5px; 
+      border-radius: 1vw; 
       background-color: rgb(223, 223, 223);
       cursor: pointer;
       box-shadow: black;
       box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      align-items: center;
+      justify-content: center;
     }
 
     .button:hover {
@@ -38,33 +43,46 @@
       background-color: rgb(255, 136, 0);
     }
 
-      .button a {
-        font-size: 160%; /* Adjust the value to control the scaling */
-        color: black;
-        text-decoration: solid;
-      }
+    .button a {
+      font-size: 4vw; /* Adjust the value to control the scaling */
+      color: black;
+      text-decoration: solid;
+      
+
+    }
     
+    .container {
+      width: 60%;
+      justify-content: center;
+      align-items: center;
+    }
+
   </style>
 </head>
 <body>
-  <h1>Three.JS Globes Tests</h1>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/Satellites.html" target="_blank">Satellites</a>
+  <div class="container">
+
+    <h1>Three.JS Globes Tests</h1>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/Satellites.html" target="_blank">Satellites</a>
+    </div>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/ChoroplethCountries.html" target="_blank">Choropleth Countries</a>
+    </div>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/CountriesPopulation.html" target="_blank">Countries Population</a>
+    </div>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/GlobeWithPoints.html" target="_blank">Globe with Points</a>
+    </div>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/WorldPopulation.html" target="_blank">World Population</a>
+    </div>
+    <div class="button">
+      <a href="https://abner-augusto.github.io/examples/Instancing_billboards.html" target="_blank">Instancing Billboards</a>
+    </div>
+
   </div>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/ChoroplethCountries.html" target="_blank">Choropleth Countries</a>
-  </div>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/CountriesPopulation.html" target="_blank">Countries Population</a>
-  </div>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/GlobeWithPoints.html" target="_blank">Globe with Points</a>
-  </div>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/WorldPopulation.html" target="_blank">World Population</a>
-  </div>
-  <div class="button">
-    <a href="https://abner-augusto.github.io/examples/Instancing_billboards.html" target="_blank">Instancing Billboards</a>
-  </div>
+
 </body>
 </html>
