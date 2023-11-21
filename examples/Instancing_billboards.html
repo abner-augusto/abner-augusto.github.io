@@ -109,6 +109,8 @@
 
 
 
+
+
 		function init() {
 
 			renderer = new THREE.WebGLRenderer();
@@ -121,6 +123,19 @@
 			}
 			
 			const hoverScale = 1.0; 
+
+			const halfToneParams = {
+			shape: 3,
+			radius: 0.8,
+			rotateR: Math.PI / 2,
+			rotateB: Math.PI / 2,
+			rotateG: Math.PI / 2,
+			scatter: 0,
+			blending: 0.9,
+			blendingMode: 1,
+			greyscale: false,
+			disable: false
+			};
 			
 
 			container = document.createElement( 'div' );
@@ -202,6 +217,7 @@
 				
 			//post processing
 
+
 			composer = new EffectComposer( renderer );
 				const renderPass = new RenderPass( scene, camera );
 				const params = {
@@ -219,6 +235,59 @@
 				const halftonePass = new HalftonePass( window.innerWidth, window.innerHeight, params );
 				composer.addPass( renderPass );
 				composer.addPass( halftonePass );
+
+			//controllers for Half Tone effect
+			const halftoneGuiFolder = gui.addFolder('Halftone');
+			halftoneGuiFolder.add(halfToneParams, 'shape', { 'Dot': 1, 'Ellipse': 2, 'Line': 3, 'Square': 4 }).onChange(function(value) {
+				halftonePass.uniforms.shape.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'radius', 0.1, 10, 0.05).onChange(function(value) {
+				halftonePass.uniforms.radius.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'rotateR', -Math.PI, Math.PI, Math.PI / 12).onChange(function(value) {
+				halftonePass.uniforms.rotateR.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'rotateB', -Math.PI, Math.PI, Math.PI / 12).onChange(function(value) {
+				halftonePass.uniforms.rotateB.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'rotateG', -Math.PI, Math.PI, Math.PI / 12).onChange(function(value) {
+				halftonePass.uniforms.rotateG.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'scatter', 0, 1, 0.01).onChange(function(value) {
+				halftonePass.uniforms.scatter.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'blending', 0, 1, 0.01).onChange(function(value) {
+				halftonePass.uniforms.blending.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'blendingMode', { Normal: 1, Lighten: 2, Darken: 3 }).onChange(function(value) {
+				halftonePass.uniforms.blendingMode.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'greyscale').onChange(function(value) {
+				halftonePass.uniforms.greyscale.value = value;
+				render();
+			});
+			
+			halftoneGuiFolder.add(halfToneParams, 'disable').onChange(function(value) {
+				halftonePass.uniforms.disable.value = value;
+				render();
+			});
+
 
 				window.onresize = function () {
 
